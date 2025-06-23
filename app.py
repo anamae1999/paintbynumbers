@@ -5,13 +5,21 @@ app = Flask(__name__)
 
 @app.route('/generate', methods=['POST'])
 def generate():
+    if 'image' not in request.files:
+        return "❌ Missing image", 400
+
     file = request.files['image']
     img_bytes = np.frombuffer(file.read(), np.uint8)
     img = cv2.imdecode(img_bytes, cv2.IMREAD_COLOR)
+
+    if img is None:
+        return "❌ Could not decode image", 400
+
     img = cv2.resize(img, (400, int(img.shape[0] * (400 / img.shape[1]))))
 
     Z = img.reshape((-1, 3)).astype(np.float32)
-    _, labels, centers = cv2.kmeans(Z, 8, None, (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0), 10, cv2.KMEANS_RANDOM_CENTERS)
+    _, labels, centers = cv2.kmeans(Z, 8, None,
+        (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 10, 1.0), 10, cv2.KMEANS_RANDOM_CENTERS)
     labels = labels.reshape(img.shape[:2])
 
     canvas = np.ones(img.shape[:2], dtype=np.uint8) * 255
