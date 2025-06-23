@@ -1,5 +1,0 @@
-Flask
-gunicorn
-Pillow
-numpy
-opencv-python
